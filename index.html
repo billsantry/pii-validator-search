@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PII Validator for Search Field</title>
+  <meta name="description" content="A simple HTML/JS tool that prevents users from entering PII (Personally Identifiable Information) into a search field.">
+  <meta property="og:title" content="PII Validator for Search Field">
+  <meta property="og:description" content="This tool helps prevent users from entering personally identifiable information into a search box.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://your-username.github.io/pii-validator-search/">
+  <meta property="og:image" content="https://your-username.github.io/pii-validator-search/favicon.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    label {
+      font-weight: bold;
+      margin-bottom: 10px;
+      display: block;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .warning {
+      color: red;
+      display: none;
+      margin-top: 5px;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #007BFF;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h2>PII Validator for Search Field</h2>
+  <form id="searchForm">
+    <label for="searchInput">Search</label>
+    <input type="text" id="searchInput" placeholder="Enter search terms...">
+    <div id="warning" class="warning">Please do not enter personal information (PII).</div>
+    <button type="submit" id="searchButton">Search</button>
+  </form>
+
+  <script>
+    const piiValidatorConfig = {
+      blockSubmission: false,
+      redactInput: false,
+      disableSearch: true
+    };
+
+    const piiPatterns = [
+      /\b\d{3}-\d{2}-\d{4}\b/,
+      /\b\d{16}\b/,
+      /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/,
+      /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z]{2,}\b/i,
+      /\b\d{1,2}[-/]\d{1,2}[-/]\d{2,4}\b/,
+      /\b\d{1,5}\s+\w+(\s+\w+)*\b/
+    ];
+
+    const searchInput = document.getElementById('searchInput');
+    const warning = document.getElementById('warning');
+    const searchBtn = document.getElementById('searchButton');
+
+    function containsPII(input) {
+      return piiPatterns.some(pattern => pattern.test(input));
+    }
+
+    function redactPII(input) {
+      piiPatterns.forEach(pattern => {
+        input = input.replace(pattern, '[REDACTED]');
+      });
+      return input;
+    }
+
+    searchInput.addEventListener('input', function () {
+      const inputVal = searchInput.value;
+      const hasPII = containsPII(inputVal);
+      warning.style.display = hasPII ? 'block' : 'none';
+      if (piiValidatorConfig.disableSearch) {
+        searchBtn.disabled = hasPII;
+      }
+    });
+
+    document.getElementById('searchForm').addEventListener('submit', function (e) {
+      const inputVal = searchInput.value;
+      const hasPII = containsPII(inputVal);
+      if (piiValidatorConfig.blockSubmission && hasPII) {
+        e.preventDefault();
+        alert("Search blocked: please remove any personal information.");
+        return;
+      }
+      if (piiValidatorConfig.redactInput && hasPII) {
+        searchInput.value = redactPII(inputVal);
+      }
+    });
+  </script>
+</body>
+</html>
